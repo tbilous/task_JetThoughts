@@ -34,6 +34,11 @@ describe 'Tasks::PartOneTaskTwo' do
 end
 
 describe 'Tasks::PartTwo' do
-  before { Tasks::PartTwo.new.convert }
-  it { YamlLint.new('translations.yml').parse_file.must_equal 0 }
+  before do
+    Tasks::PartTwo.new.convert
+    @file = 'translations.yml'
+  end
+  after { File.delete(@file) if File.exist?(@file) }
+
+  it { YamlLint.new(@file).parse_file.must_equal 0 }
 end

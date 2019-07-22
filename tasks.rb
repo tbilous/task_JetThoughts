@@ -1,8 +1,7 @@
-# require './tasks'
 module Tasks
   require 'ostruct'
 
-  # r = Tasks::PartOneTaskOne.new('abcdab987612').squash
+  # example: r = Tasks::PartOneTaskOne.new('abcdab987612').squash
   class PartOneTaskOne
     def initialize(input_str)
       @input_chars = input_str.chars
@@ -43,66 +42,64 @@ module Tasks
     end
   end
 
-  # r = Tasks::PartOneTaskTwoVerOne.new('To be or not to be -that is the question', 5).justify
-  class PartOneTaskTwoVerOne
+  # example: r = Tasks::PartOneTaskTwoVerOne.new('To be or not to be -that is the question', 5, 'v1').justify
+  class PartOneTaskTwo
     def initialize(*args)
-      @v1, @v2 = args
+      @input_str, @n, @config = args
     end
 
     def justify
-      @v1.scan(/.{1,#{@v2}}\b|.{1,#{@v2}}/).each(&:lstrip!).join("\n")
-    end
-  end
-
-  # r = Tasks::PartOneTaskTwoVerTwo.new('To be or not to be -that is the question', 5).justify
-  class PartOneTaskTwoVerTwo
-    def initialize(*args)
-      v1, v2 = args
-      @input_str = v1
-      @n = v2.to_i
-      @input_words = @input_str.split(/\s+/)
+      @config == 'v1' ? var_1 : var_2
     end
 
-    def justify
-      res = @input_words.each_with_object(initial_state) do |current_word, state|
+    private
+
+    def var_1
+      @input_str.scan(/.{1,#{@n}}\b|.{1,#{@n}}/).each(&:strip!).join("\n")
+    end
+
+    def var_2
+      input_words = @input_str.split(/\s+/)
+      first_word = input_words.shift
+
+      initial_state = OpenStruct.new(
+          out: [],
+          current_line_len: 0,
+          buffer: [first_word],
+          last_seen: first_word
+      )
+
+      res = input_words.reduce(initial_state) do |state, current_word|
         current_word_len = current_word.length
 
         if current_word_len > @n
           chunks = current_word.chars.each_slice(@n).to_a.map(&:join)
           current_word = chunks.pop
 
-          state.out.push(state.buffer.join(' '))
+          state.out.push(state.buffer.join(" "))
           state.out += chunks
           state.buffer = [current_word]
           state.current_line_len = current_word.length
-        elsif state.current_line_len + current_word_len + state.buffer.count <= @n
-          state.current_line_len += current_word_len
-          state.buffer.push(current_word)
         else
-          state.out.push(state.buffer.join(' '))
-          state.buffer = [current_word]
-          state.current_line_len = current_word.length
+          if state.current_line_len + current_word_len + state.buffer.count <= @n
+            state.current_line_len += current_word_len
+            state.buffer.push(current_word)
+          else
+            state.out.push(state.buffer.join(" "))
+            state.buffer = [current_word]
+            state.current_line_len = current_word.length
+          end
         end
+
+        state.last_seen = current_word
+        state
       end
 
       res.out.push(res.last_seen).join("\n")
     end
-
-    private
-
-    def initial_state
-      first_word = @input_words.shift
-      OpenStruct.new(
-        out: [],
-        current_line_len: 0,
-        buffer: [first_word],
-        last_seen: first_word
-      )
-    end
   end
 
-  # require './tasks'
-  # r = Tasks::PartTwo.new.convert
+  # example: r = Tasks::PartTwo.new.convert
   class PartTwo
     require 'json'
     require 'yaml'
